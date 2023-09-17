@@ -22,4 +22,5 @@ int _putchar(int c)
 		buffer[i++] = c;
 		return (1);
 	}
+	return (unsigned char)c;
 }

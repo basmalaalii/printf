@@ -65,7 +65,8 @@ int print_string(va_list ap, params_t *params)
 
 	if (params->minus_flag)
 	{
-		for (unsigned int i = 0; i < padding; i++)
+		unsigned int i;
+		for (i = 0; i < padding; i++)
 			sum += _putchar(*str++);
 	}
 
