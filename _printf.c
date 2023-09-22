@@ -1,66 +1,68 @@
 #include "main.h"
-
-void print_buffer(char buffer[], int *buff_ind);
+#include <stdarg.h>
+#include <unistd.h>
 
 /**
- * _printf - Printf function
- * @format: format.
- * Return: Printed chars.
+ * _printf - Custom printf function to print formatted output.
+ * @format: Format string containing the specifiers.
+ *
+ * Return: Number of characters printed (excluding null byte).
  */
 int _printf(const char *format, ...)
 {
-	int i, printed = 0, printed_chars = 0;
-	int flags, width, precision, size, buff_ind = 0;
-	va_list list;
-	char buffer[BUFF_SIZE];
+	va_list args;
+	int count = 0;
+	const char *ptr;
 
 	if (format == NULL)
 		return (-1);
 
-	va_start(list, format);
-
-	for (i = 0; format && format[i] != '\0'; i++)
+	va_start(args, format);
+	for (ptr = format; *ptr != '\0'; ptr++)
 	{
-		if (format[i] != '%')
+		if (*ptr == '%' &&
+				(*(ptr + 1) == 'c' || *(ptr + 1) == 's' || *(ptr + 1) == '%'))
 		{
-			buffer[buff_ind++] = format[i];
-			if (buff_ind == BUFF_SIZE)
-				print_buffer(buffer, &buff_ind);
-			/* write(1, &format[i], 1);*/
-			printed_chars++;
+			ptr++;
+			switch (*ptr)
+			{
+			case 'c':
+				count += write(1, &(char){va_arg(args, int)}, 1);
+				break;
+			case 's':
+			{
+				char *str = va_arg(args, char *);
+
+				str = (str == NULL) ? "(null)" : str;
+
+				count += write(1, str, _strlen(str));
+				break;
+			}
+			case '%':
+				count += write(1, "%", 1);
+				break;
+			}
 		}
+		else if (*ptr == '%')
+			continue;
 		else
-		{
-			print_buffer(buffer, &buff_ind);
-			flags = get_flags(format, &i);
-			width = get_width(format, &i, list);
-			precision = get_precision(format, &i, list);
-			size = get_size(format, &i);
-			++i;
-			printed = handle_print(format, &i, list, buffer,
-				flags, width, precision, size);
-			if (printed == -1)
-				return (-1);
-			printed_chars += printed;
-		}
+			count += write(1, ptr, 1);
 	}
-
-	print_buffer(buffer, &buff_ind);
-
-	va_end(list);
-
-	return (printed_chars);
+	va_end(args);
+	return (count);
 }
 
 /**
- * print_buffer - Prints the contents of the buffer if it exist
- * @buffer: Array of chars
- * @buff_ind: Index at which to add next char, represents the length.
+ * _strlen - Computes the length of a string.
+ * @s: The string to be measured.
+ *
+ * Return: The length of the string.
  */
-void print_buffer(char buffer[], int *buff_ind)
+int _strlen(char *s)
 {
-	if (*buff_ind > 0)
-		write(1, &buffer[0], *buff_ind);
+	int length = 0;
 
-	*buff_ind = 0;
+	while (*s++)
+		length++;
+	return (length);
 }
